@@ -3,7 +3,6 @@ package converter
 import (
 	"app/pkg/abstract"
 	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -14,11 +13,29 @@ import (
 
 const (
 	apacheAccessLogDateLayout = "02/Jan/2006:15:04:05 -0700"
+
+	regExpIp                          = `^(\S+)\s`
+	regExpRemoteLogName               = `\S+\s+`
+	regExpRemoteUser                  = `(?:\S+\s+)+`
+	regExpDate                        = `\[([^]]+)\]\s`
+	regExpMethod                      = `"(\S*)\s?`
+	regExpUrl                         = `(?:((?:[^"]*(?:\\")?)*)\s`
+	regExpProtocol                    = `([^"]*)"\s|`
+	regExpOptionnalUrlWithoutProtocol = `((?:[^"]*(?:\\")?)*)"\s)`
+	regExpStatusCode                  = `(\S+)\s`
+	regExpBytes                       = `(\S+)\s`
+	regExpReferres                    = `"((?:[^"]*(?:\\")?)*)"\s`
+	regExpUserAgent                   = `"(.*)"$`
+
+	lineRegExp = regExpIp + regExpRemoteLogName + regExpRemoteUser +
+		regExpDate + regExpMethod + regExpUrl + regExpProtocol +
+		regExpOptionnalUrlWithoutProtocol + regExpStatusCode + regExpBytes +
+		regExpReferres + regExpUserAgent
 )
 
 func ConvertFile(f io.Reader, db abstract.DBLineInserter) error {
 
-	re, err := lineRegExp()
+	re, err := compileLineRegExp()
 	if err != nil {
 		return fmt.Errorf("Cannot compile reg exp : %w", err)
 	}
@@ -38,22 +55,8 @@ func ConvertFile(f io.Reader, db abstract.DBLineInserter) error {
 	return nil
 }
 
-func lineRegExp() (*regexp.Regexp, error) {
-	var buffer bytes.Buffer
-	buffer.WriteString(`^(\S+)\s`)                  // 1) IP
-	buffer.WriteString(`\S+\s+`)                    // remote logname
-	buffer.WriteString(`(?:\S+\s+)+`)               // remote user
-	buffer.WriteString(`\[([^]]+)\]\s`)             // 2) date
-	buffer.WriteString(`"(\S*)\s?`)                 // 3) method
-	buffer.WriteString(`(?:((?:[^"]*(?:\\")?)*)\s`) // 4) URL
-	buffer.WriteString(`([^"]*)"\s|`)               // 5) protocol
-	buffer.WriteString(`((?:[^"]*(?:\\")?)*)"\s)`)  // 6) or, possibly URL with no protocol
-	buffer.WriteString(`(\S+)\s`)                   // 7) status code
-	buffer.WriteString(`(\S+)\s`)                   // 8) bytes
-	buffer.WriteString(`"((?:[^"]*(?:\\")?)*)"\s`)  // 9) referrer
-	buffer.WriteString(`"(.*)"$`)                   // 10) user agent
-
-	return regexp.Compile(buffer.String())
+func compileLineRegExp() (*regexp.Regexp, error) {
+	return regexp.Compile(lineRegExp)
 }
 
 func parseLine(re *regexp.Regexp, l string) (abstract.Line, error) {

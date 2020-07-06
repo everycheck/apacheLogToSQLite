@@ -1,4 +1,23 @@
 mode: set
+app/pkg/domain/converter/converter.go:36.65,39.16 2 1
+app/pkg/domain/converter/converter.go:43.2,44.21 2 1
+app/pkg/domain/converter/converter.go:52.2,52.26 1 1
+app/pkg/domain/converter/converter.go:55.2,55.12 1 1
+app/pkg/domain/converter/converter.go:39.16,41.3 1 0
+app/pkg/domain/converter/converter.go:44.21,46.17 2 1
+app/pkg/domain/converter/converter.go:49.3,49.34 1 1
+app/pkg/domain/converter/converter.go:46.17,48.4 1 0
+app/pkg/domain/converter/converter.go:52.26,54.3 1 0
+app/pkg/domain/converter/converter.go:58.50,60.2 1 1
+app/pkg/domain/converter/converter.go:62.68,71.16 6 1
+app/pkg/domain/converter/converter.go:74.2,76.16 3 1
+app/pkg/domain/converter/converter.go:79.2,80.16 2 1
+app/pkg/domain/converter/converter.go:83.2,86.28 4 1
+app/pkg/domain/converter/converter.go:90.2,90.22 1 1
+app/pkg/domain/converter/converter.go:71.16,73.3 1 1
+app/pkg/domain/converter/converter.go:76.16,78.3 1 1
+app/pkg/domain/converter/converter.go:80.16,82.3 1 1
+app/pkg/domain/converter/converter.go:86.28,88.3 1 1
 app/pkg/adapter/db/connect.go:14.44,16.16 2 1
 app/pkg/adapter/db/connect.go:20.2,20.13 1 1
 app/pkg/adapter/db/connect.go:16.16,18.3 1 1
