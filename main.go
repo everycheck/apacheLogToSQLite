@@ -15,7 +15,7 @@ func main() {
 
 	flag.StringVar(&sqlitePath, "sqlite", "local.db", "path to sqlite file")
 	flag.StringVar(&logPath, "log", "", "path to log file")
-	flag.BoolVar(&clearDb, "clearDb", true, "Should we clear database if already present ? ")
+	flag.BoolVar(&clearDb, "clearDb", false, "Should we clear database if already present ? ")
 	flag.Parse()
 
 	if clearDb {
@@ -37,6 +37,7 @@ func main() {
 	}
 	defer logFile.Close()
 
+	fmt.Println("converting file : ", logPath)
 	err = converter.ConvertFile(logFile, querier)
 	if err != nil {
 		fmt.Println("Error while parsing log file : ", err)
