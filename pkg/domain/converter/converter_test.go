@@ -3,6 +3,7 @@ package converter
 import (
 	"app/pkg/abstract"
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -154,5 +155,29 @@ func TestConvertFileSuccess(t *testing.T) {
 			t.Fatalf("[%d] error Insert should have been called %d got %d, ", i, tt.expected, fi.called)
 		}
 
+	}
+}
+
+func TestConvertFileCannotInsert(t *testing.T) {
+
+	tests := []struct {
+		input string
+	}{
+		{
+			input: `51.255.43.108 - - [05/Jul/2020:06:26:00 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"`,
+		},
+	}
+
+	for i, tt := range tests {
+		errStr := "Cannont insert in test"
+		packerErrStr := "Cannot insert in db : " + errStr
+		fi := &fakeInserter{shouldFailed: fmt.Errorf(errStr)}
+		err := ConvertFile(strings.NewReader(tt.input), fi)
+		if err == nil {
+			t.Fatalf("[%d] should have failed while parsing %s", i, tt.input)
+		}
+		if err.Error() != packerErrStr {
+			t.Fatalf("[%d] error result is not equal to expected\n exp %#v\n got %#v\n, ", i, packerErrStr, err.Error())
+		}
 	}
 }
