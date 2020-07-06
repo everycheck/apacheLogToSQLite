@@ -1,5 +1,10 @@
 package abstract
 
+import (
+	"context"
+	"time"
+)
+
 type Line struct {
 	RemoteHost string
 	Time       time.Time
@@ -12,10 +17,10 @@ type Line struct {
 }
 
 type DBLineInserter interface {
-	Insert(ctx context.context, line Line) error
+	Insert(ctx context.Context, line Line) error
 }
 
 type DB interface {
 	DBLineInserter
-	Close()
+	Close() error
 }

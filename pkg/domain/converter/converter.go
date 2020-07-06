@@ -3,8 +3,13 @@ package converter
 import (
 	"app/pkg/abstract"
 	"bufio"
+	"bytes"
+	"context"
+	"fmt"
 	"io"
 	"regexp"
+	"strconv"
+	"time"
 )
 
 const (
@@ -18,10 +23,12 @@ func ConvertFile(f io.Reader, db abstract.DBLineInserter) error {
 		return fmt.Errorf("Cannot compile reg exp : %w", err)
 	}
 
-	var lines []string
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		line, err := parseLine(scanner.Text(), re)
+		line, err := parseLine(re, scanner.Text())
+		if err != nil {
+			return fmt.Errorf("Error while parsing line : %w", err)
+		}
 		db.Insert(context.TODO(), line)
 	}
 
@@ -31,7 +38,7 @@ func ConvertFile(f io.Reader, db abstract.DBLineInserter) error {
 	return nil
 }
 
-func lineRegExp() (regexp, error) {
+func lineRegExp() (*regexp.Regexp, error) {
 	var buffer bytes.Buffer
 	buffer.WriteString(`^(\S+)\s`)                  // 1) IP
 	buffer.WriteString(`\S+\s+`)                    // remote logname
@@ -49,7 +56,9 @@ func lineRegExp() (regexp, error) {
 	return regexp.Compile(buffer.String())
 }
 
-func parseLine(re regex, l string) (abstract.Line, error) {
+func parseLine(re *regexp.Regexp, l string) (abstract.Line, error) {
+
+	var err error
 
 	result := re.FindStringSubmatch(l)
 
@@ -75,5 +84,5 @@ func parseLine(re regex, l string) (abstract.Line, error) {
 		lineItem.URL = result[6]
 	}
 
-	return lineItem
+	return lineItem, nil
 }

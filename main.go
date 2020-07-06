@@ -30,7 +30,7 @@ func main() {
 	}
 	defer logFile.Close()
 
-	err = converter.Convert(logFile, querier)
+	err = converter.ConvertFile(logFile, querier)
 	if err != nil {
 		fmt.Println(err)
 	}

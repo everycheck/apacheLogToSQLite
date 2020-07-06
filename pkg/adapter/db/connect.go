@@ -2,7 +2,6 @@ package db
 
 import (
 	"app/pkg/abstract"
-	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -23,7 +22,7 @@ func Connect(url string) (abstract.DB, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Cannot open %s : %w", urlPart[1], err)
 		}
-		return &dBLineInserter{db: db}, nil
+		return &querier{db: db}, nil
 	}
 
 	return nil, fmt.Errorf("Unrecognized protocol :%s, expect : sqlite3\n", urlPart[0])

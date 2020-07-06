@@ -18,7 +18,7 @@ CREATE TABLE entry (
 	URL        CHAR(255)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;`
 
-func initTable(ctx context.context, db *sql.DB) error {
+func initTable(ctx context.Context, db *sql.DB) error {
 	fmt.Println("Local database initialization...")
 	_, err := db.ExecContext(ctx, initQuery)
 	return err
