@@ -2,12 +2,23 @@ package db
 
 import (
 	"app/pkg/abstract"
+	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
+func wasDbAlreadyCreated(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
 
 func Connect(url string) (abstract.DB, error) {
 	urlPart := strings.Split(url, "://")
@@ -18,10 +29,19 @@ func Connect(url string) (abstract.DB, error) {
 
 	switch urlPart[0] {
 	case "sqlite3":
+		wasDbCreated := wasDbAlreadyCreated(urlPart[1])
 		db, err := sql.Open(urlPart[0], urlPart[1])
 		if err != nil {
 			return nil, fmt.Errorf("Cannot open %s : %w", urlPart[1], err)
 		}
+
+		if !wasDbCreated {
+			err = initTable(context.TODO(), db)
+			if err != nil {
+				return nil, fmt.Errorf("Cannot initialize db at %s : %w", urlPart[1], err)
+			}
+		}
+
 		return &querier{db: db}, nil
 	}
 
