@@ -1,7 +1,6 @@
 package db
 
 import (
-	"app/pkg/abstract"
 	"context"
 	"database/sql"
 	"fmt"
@@ -20,7 +19,7 @@ func wasDbAlreadyCreated(path string) bool {
 	return true
 }
 
-func Connect(url string) (abstract.DB, error) {
+func Connect(url string) (*querier, error) {
 	urlPart := strings.Split(url, "://")
 
 	if len(urlPart) != 2 {

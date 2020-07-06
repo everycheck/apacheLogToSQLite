@@ -11,12 +11,19 @@ import (
 func main() {
 	var sqlitePath string
 	var logPath string
+	var clearDb bool
 
-	flag.StringVar(&sqlitePath, "sqlite", "sqlite3://local.db", "path to sqlite file")
+	flag.StringVar(&sqlitePath, "sqlite", "local.db", "path to sqlite file")
 	flag.StringVar(&logPath, "log", "", "path to log file")
+	flag.BoolVar(&clearDb, "clearDb", true, "Should we clear database if already present ? ")
 	flag.Parse()
 
-	querier, err := db.Connect(sqlitePath)
+	if clearDb {
+		fmt.Println("Cleanning previous database")
+		_ = os.Remove(sqlitePath)
+	}
+
+	querier, err := db.Connect("sqlite3://" + sqlitePath)
 	if err != nil {
 		fmt.Println("cannot connect", err)
 		return

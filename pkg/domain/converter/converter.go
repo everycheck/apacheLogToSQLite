@@ -46,7 +46,10 @@ func ConvertFile(f io.Reader, db abstract.DBLineInserter) error {
 		if err != nil {
 			return fmt.Errorf("Error while parsing line : %w", err)
 		}
-		db.Insert(context.TODO(), line)
+		err = db.Insert(context.TODO(), line)
+		if err != nil {
+			return fmt.Errorf("Cannot insert in db : %w", err)
+		}
 	}
 
 	if scanner.Err() != nil {

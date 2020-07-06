@@ -6,8 +6,7 @@ import (
 	"fmt"
 )
 
-const initQuery = `DROP TABLE IF EXISTS entry;
-CREATE TABLE entry (
+const initQuery = `CREATE TABLE entry (
 	RemoteHost CHAR(255),
 	Time       DATETIME,
 	Request    CHAR(255),
