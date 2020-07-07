@@ -115,7 +115,7 @@ type fakeInserter struct {
 	shouldFailed error
 }
 
-func (fi *fakeInserter) Insert(ctx context.Context, line abstract.Line) error {
+func (fi *fakeInserter) BulkInsert(ctx context.Context, lines []abstract.Line) error {
 	fi.called++
 	if fi.shouldFailed != nil {
 		return fi.shouldFailed
@@ -126,8 +126,9 @@ func (fi *fakeInserter) Insert(ctx context.Context, line abstract.Line) error {
 func TestConvertFileSuccess(t *testing.T) {
 
 	tests := []struct {
-		input    string
-		expected int
+		input     string
+		batchSize int
+		expected  int
 	}{
 		{
 			input: `51.255.43.108 - - [05/Jul/2020:06:26:00 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
@@ -135,18 +136,37 @@ func TestConvertFileSuccess(t *testing.T) {
 51.255.43.108 - - [05/Jul/2020:06:26:02 +0200] "POST /emails/process/take HTTP/1.1" 404 240 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
 51.255.43.108 - - [05/Jul/2020:06:27:01 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
 51.255.43.108 - - [05/Jul/2020:06:27:01 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"`,
-			expected: 5,
+			batchSize: 1,
+			expected:  5,
 		},
-
 		{
-			input:    `51.255.43.108 - - [05/Jul/2020:06:26:00 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"`,
-			expected: 1,
+			input: `51.255.43.108 - - [05/Jul/2020:06:26:00 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
+51.255.43.108 - - [05/Jul/2020:06:26:01 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
+51.255.43.108 - - [05/Jul/2020:06:26:02 +0200] "POST /emails/process/take HTTP/1.1" 404 240 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
+51.255.43.108 - - [05/Jul/2020:06:27:01 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
+51.255.43.108 - - [05/Jul/2020:06:27:01 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"`,
+			batchSize: 5,
+			expected:  1,
+		},
+		{
+			input: `51.255.43.108 - - [05/Jul/2020:06:26:00 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
+51.255.43.108 - - [05/Jul/2020:06:26:01 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
+51.255.43.108 - - [05/Jul/2020:06:26:02 +0200] "POST /emails/process/take HTTP/1.1" 404 240 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
+51.255.43.108 - - [05/Jul/2020:06:27:01 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"
+51.255.43.108 - - [05/Jul/2020:06:27:01 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"`,
+			batchSize: 3,
+			expected:  2,
+		},
+		{
+			input:     `51.255.43.108 - - [05/Jul/2020:06:26:00 +0200] "POST /tokens/jwt HTTP/1.1" 201 3472 "-" "GuzzleHttp/6.5.1 curl/7.52.1 PHP/7.1.33-8+0~20200202.31+debian9~1.gbp266c28"`,
+			batchSize: 1,
+			expected:  1,
 		},
 	}
 
 	for i, tt := range tests {
 		fi := &fakeInserter{}
-		err := ConvertFile(strings.NewReader(tt.input), fi)
+		err := ConvertFile(strings.NewReader(tt.input), fi, tt.batchSize)
 		if err != nil {
 			t.Fatalf("[%d] error while parsing %s : %v", i, tt.input, err)
 		}
@@ -172,7 +192,7 @@ func TestConvertFileCannotInsert(t *testing.T) {
 		errStr := "Cannont insert in test"
 		packerErrStr := "Cannot insert in db : " + errStr
 		fi := &fakeInserter{shouldFailed: fmt.Errorf(errStr)}
-		err := ConvertFile(strings.NewReader(tt.input), fi)
+		err := ConvertFile(strings.NewReader(tt.input), fi, 1)
 		if err == nil {
 			t.Fatalf("[%d] should have failed while parsing %s", i, tt.input)
 		}

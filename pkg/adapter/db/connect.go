@@ -41,7 +41,7 @@ func Connect(url string) (*querier, error) {
 			}
 		}
 
-		return &querier{db: db}, nil
+		return &querier{db: db, insertStmt: map[int]*sql.Stmt{}}, nil
 	}
 
 	return nil, fmt.Errorf("Unrecognized protocol :%s, expect : sqlite3\n", urlPart[0])

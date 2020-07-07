@@ -12,10 +12,12 @@ func main() {
 	var sqlitePath string
 	var logPath string
 	var clearDb bool
+	var batchSize int
 
 	flag.StringVar(&sqlitePath, "sqlite", "local.db", "path to sqlite file")
 	flag.StringVar(&logPath, "log", "", "path to log file")
 	flag.BoolVar(&clearDb, "clearDb", false, "Should we clear database if already present ? ")
+	flag.IntVar(&batchSize, "batchSize", 1000, "number of item to inster by query")
 	flag.Parse()
 
 	if clearDb {
@@ -38,7 +40,7 @@ func main() {
 	defer logFile.Close()
 
 	fmt.Println("converting file : ", logPath)
-	err = converter.ConvertFile(logFile, querier)
+	err = converter.ConvertFile(logFile, querier, batchSize)
 	if err != nil {
 		fmt.Println("Error while parsing log file : ", err)
 	}

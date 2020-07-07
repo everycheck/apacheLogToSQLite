@@ -33,20 +33,32 @@ const (
 		regExpReferres + regExpUserAgent
 )
 
-func ConvertFile(f io.Reader, db abstract.DBLineInserter) error {
+func ConvertFile(f io.Reader, db abstract.DBLineBulkInserter, batch int) error {
 
 	re, err := compileLineRegExp()
 	if err != nil {
 		return fmt.Errorf("Cannot compile reg exp : %w", err)
 	}
 
+	lines := make([]abstract.Line, 0, batch)
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line, err := parseLine(re, scanner.Text())
 		if err != nil {
 			return fmt.Errorf("Error while parsing line : %w", err)
 		}
-		err = db.Insert(context.TODO(), line)
+		lines = append(lines, line)
+		if len(lines) == batch {
+			err = db.BulkInsert(context.TODO(), lines)
+			if err != nil {
+				return fmt.Errorf("Cannot insert in db : %w", err)
+			}
+			lines = make([]abstract.Line, 0, batch)
+		}
+	}
+
+	if len(lines) > 0 {
+		err = db.BulkInsert(context.TODO(), lines)
 		if err != nil {
 			return fmt.Errorf("Cannot insert in db : %w", err)
 		}
